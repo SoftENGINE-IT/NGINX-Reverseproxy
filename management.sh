@@ -53,6 +53,9 @@ server {
     location / {
         proxy_pass http://$new_internal_ip:$new_internal_port/;
         proxy_set_header Host \$host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_request_buffering off;
@@ -105,6 +108,9 @@ server {
     location / {
         proxy_pass http://$internal_ip:$internal_port;
         proxy_set_header Host \$host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_request_buffering off;
@@ -134,6 +140,9 @@ server {
     location / {
         proxy_pass http://$internal_ip:$internal_port/;
         proxy_set_header Host \$host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \$connection_upgrade;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_request_buffering off;
