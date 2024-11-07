@@ -2,8 +2,11 @@
 
 # Auswahlmenü anzeigen
 echo "Was möchten Sie tun?"
+echo "-------------------------------------------------------"
+echo ""
 echo "1: Installation der Umgebung auf einem Debian12 System"
 echo "2: Erstellung eines neuen ProxyHosts"
+echo ""
 read -p "Wählen Sie eine Option (1 oder 2): " option
 
 # Auswahl überprüfen und entsprechende Aktion ausführen
