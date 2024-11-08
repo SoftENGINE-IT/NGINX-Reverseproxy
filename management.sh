@@ -40,6 +40,7 @@ elif [ "$option" -eq 2 ]; then
 
         elif [ "$choice" == "h" ]; then
             # Neue Werte für zusätzlichen Service abfragen
+            read -p "Geben Sie das foreward scheme an (http oder https): " new_foreward_scheme
             read -p "Geben Sie die IP des neuen internen Servers an: " new_internal_ip
             read -p "Geben Sie den Port des neuen internen Servers an: " new_internal_port
             read -p "Geben Sie den externen Port für den neuen Service an: " new_external_port
@@ -51,15 +52,15 @@ server {
     server_name $fqdn;
 
     location / {
-        proxy_pass http://$new_internal_ip:$new_internal_port/;
-        proxy_set_header Host \$host;
+        proxy_pass $new_foreward_scheme://$new_internal_ip:$new_internal_port/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Scheme $scheme;
+        proxy_set_header X-Forwarded-Proto  $scheme;
+        proxy_set_header X-Forwarded-For    $remote_addr;
+        proxy_set_header X-Real-IP          $remote_addr;
+        proxy_set_header Upgrade            $http_upgrade;
+        proxy_set_header Connection         $http_connection;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection \$connection_upgrade;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_request_buffering off;
-        proxy_buffering off;
     }
 
     listen [::]:$new_external_port ssl ipv6only=on; # managed by Certbot
@@ -90,6 +91,7 @@ EOF
     fi
 
     # Falls die Datei noch nicht existiert: Einmalige Eingaben für neuen Service
+    read -p "Geben Sie das foreward scheme an (http oder https): " foreward_scheme
     read -p "Geben Sie die IP des internen Servers an: " internal_ip
     read -p "Geben Sie den Port der internen Anwendung an: " internal_port
     read -p "Geben Sie den externen Port an (z.B. 443): " external_port
@@ -106,15 +108,15 @@ server {
     server_name $fqdn;
 
     location / {
-        proxy_pass http://$internal_ip:$internal_port;
-        proxy_set_header Host \$host;
+        proxy_pass $foreward_scheme://$internal_ip:$internal_port;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Scheme $scheme;
+        proxy_set_header X-Forwarded-Proto  $scheme;
+        proxy_set_header X-Forwarded-For    $remote_addr;
+        proxy_set_header X-Real-IP          $remote_addr;
+        proxy_set_header Upgrade            $http_upgrade;
+        proxy_set_header Connection         $http_connection;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection \$connection_upgrade;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_request_buffering off;
-        proxy_buffering off;
     }
 }
 EOF
@@ -138,7 +140,7 @@ server {
     server_name $fqdn;
 
     location / {
-        proxy_pass http://$internal_ip:$internal_port/;
+        proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
         proxy_set_header Host \$host;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
