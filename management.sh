@@ -22,6 +22,9 @@ elif [ "$option" -eq 2 ]; then
     # FQDN abfragen
     read -p "Geben Sie den FQDN an (z.B. server.example.com): " fqdn
     
+    # Websocket-Aktivierung abfragen
+    read -p "Sollen Websockets aktiviert werden? (y/n): " enable_websockets
+    
     # Extrahiere die Subdomain aus dem FQDN
     subdomain=$(echo "$fqdn" | cut -d '.' -f1)
 
@@ -45,6 +48,17 @@ elif [ "$option" -eq 2 ]; then
             read -p "Geben Sie den Port des neuen internen Servers an: " new_internal_port
             read -p "Geben Sie den externen Port für den neuen Service an: " new_external_port
 
+            # Websocket Header abhängig von der Auswahl
+            if [ "$enable_websockets" == "y" ]; then
+                websocket_headers="proxy_set_header Upgrade            \$http_upgrade;
+        proxy_set_header Connection         \$http_connection;
+        proxy_http_version 1.1;"
+            else
+                websocket_headers="# proxy_set_header Upgrade            \$http_upgrade;
+        # proxy_set_header Connection         \$http_connection;
+        # proxy_http_version 1.1;"
+            fi
+
             # Konfiguration für den neuen Service an bestehende Datei anhängen
             cat <<EOF >> "$conf_file"
 server {
@@ -53,14 +67,16 @@ server {
 
     location / {
         proxy_pass $new_foreward_scheme://$new_internal_ip:$new_internal_port/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Scheme $scheme;
-        proxy_set_header X-Forwarded-Proto  $scheme;
-        proxy_set_header X-Forwarded-For    $remote_addr;
-        proxy_set_header X-Real-IP          $remote_addr;
-        proxy_set_header Upgrade            $http_upgrade;
-        proxy_set_header Connection         $http_connection;
-        proxy_http_version 1.1;
+
+        # Default Header
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Scheme \$scheme;
+        proxy_set_header X-Forwarded-Proto  \$scheme;
+        proxy_set_header X-Forwarded-For    \$remote_addr;
+        proxy_set_header X-Real-IP          \$remote_addr;
+        
+        # Websocket Header 
+        $websocket_headers
     }
 
     listen [::]:$new_external_port ssl ipv6only=on; # managed by Certbot
@@ -96,8 +112,16 @@ EOF
     read -p "Geben Sie den Port der internen Anwendung an: " internal_port
     read -p "Geben Sie den externen Port an (z.B. 443): " external_port
 
-    # Dateiname für die Konfigurationsdatei
-    conf_file="/etc/nginx/conf.d/${subdomain}.conf"
+    # Websocket Header abhängig von der Auswahl
+    if [ "$enable_websockets" == "y" ]; then
+        websocket_headers="proxy_set_header Upgrade            \$http_upgrade;
+        proxy_set_header Connection         \$http_connection;
+        proxy_http_version 1.1;"
+    else
+        websocket_headers="# proxy_set_header Upgrade            \$http_upgrade;
+        # proxy_set_header Connection         \$http_connection;
+        # proxy_http_version 1.1;"
+    fi
 
     # Erstelle die Konfigurationsdatei
     cat <<EOF > "$conf_file"
@@ -108,15 +132,17 @@ server {
     server_name $fqdn;
 
     location / {
-        proxy_pass $foreward_scheme://$internal_ip:$internal_port;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Scheme $scheme;
-        proxy_set_header X-Forwarded-Proto  $scheme;
-        proxy_set_header X-Forwarded-For    $remote_addr;
-        proxy_set_header X-Real-IP          $remote_addr;
-        proxy_set_header Upgrade            $http_upgrade;
-        proxy_set_header Connection         $http_connection;
-        proxy_http_version 1.1;
+        proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
+
+        # Default Header
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Scheme \$scheme;
+        proxy_set_header X-Forwarded-Proto  \$scheme;
+        proxy_set_header X-Forwarded-For    \$remote_addr;
+        proxy_set_header X-Real-IP          \$remote_addr;
+        
+        # Websocket Header 
+        $websocket_headers
     }
 }
 EOF
@@ -141,14 +167,16 @@ server {
 
     location / {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
+
+        # Default Header
         proxy_set_header Host \$host;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection \$connection_upgrade;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_request_buffering off;
-        proxy_buffering off;
+        proxy_set_header X-Forwarded-Scheme \$scheme;
+        proxy_set_header X-Forwarded-Proto  \$scheme;
+        proxy_set_header X-Forwarded-For    \$remote_addr;
+        proxy_set_header X-Real-IP          \$remote_addr;
+        
+        # Websocket Header 
+        $websocket_headers
     }
 
     listen [::]:$external_port ssl ipv6only=on; # managed by Certbot
