@@ -74,7 +74,9 @@ server {
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
         proxy_set_header X-Real-IP          \$remote_addr;
-        
+        proxy_request_buffering off;
+        proxy_buffering off;
+
         # Websocket Header 
         $websocket_headers
     }
@@ -140,7 +142,9 @@ server {
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
         proxy_set_header X-Real-IP          \$remote_addr;
-        
+        proxy_request_buffering off;
+        proxy_buffering off;
+
         # Websocket Header 
         $websocket_headers
     }
@@ -174,7 +178,9 @@ server {
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
         proxy_set_header X-Real-IP          \$remote_addr;
-        
+        proxy_request_buffering off;
+        proxy_buffering off;        
+
         # Websocket Header 
         $websocket_headers
     }
