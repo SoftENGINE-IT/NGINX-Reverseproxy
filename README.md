@@ -1,13 +1,13 @@
 # NGINX Proxy Host Management Script
 
-Dieses Bash-Skript vereinfacht die Verwaltung von Proxy-Hosts auf einem Debian 12-System. Es ermöglicht die Installation einer Umgebung sowie das Hinzufügen und Konfigurieren neuer Proxy-Hosts auf NGINX, einschließlich der Möglichkeit zur Aktivierung von Websocket-Headern.
+Dieses Bash-Skript vereinfacht die Verwaltung von Proxy-Hosts auf einem Debian 12 System. Es ermöglicht die Installation einer Umgebung sowie das Hinzufügen und Konfigurieren neuer Proxy-Hosts auf NGINX, einschließlich der Möglichkeit zur Aktivierung von Websocket-Headern.
 
 ## Funktionen
 
 - **Installation der Umgebung auf einem Debian 12-System**
 - **Erstellung eines neuen Proxy-Hosts** mit benutzerdefinierten Einstellungen
 - **Option zur Aktivierung von Websockets**: Möglichkeit, Websocket-Header automatisch zu aktivieren oder auszukommentieren
-- **SSL-Zertifikate** durch Certbot Integration für automatische Zertifikatserstellung und Updates
+- **SSL-Zertifikate** durch Certbot Integration für automatische Zertifikaterstellung und Updates
 
 ## Voraussetzungen
 
