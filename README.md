@@ -19,8 +19,8 @@ Dieses Bash-Skript vereinfacht die Verwaltung von Proxy-Hosts auf einem Debian 1
 
 1. Klone das Repository:
    ```bash
-   git clone https://github.com/your-username/nginx-proxy-manager.git
-   cd nginx-proxy-manager
+   git clone https://github.com/SoftENGINE-IT/NGINX-Reverseproxy.git
+   cd NGINX-Reverseproxy
 2. Ausführbar machen der Skripte:
    ```bash
     chmod +x management.sh && chmod +x setup.sh
