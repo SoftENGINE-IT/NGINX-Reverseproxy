@@ -65,6 +65,8 @@ server {
 
     server_name $fqdn;
 
+    client_max_body_size 100M;
+
     location / {
         proxy_pass $new_foreward_scheme://$new_internal_ip:$new_internal_port/;
 
@@ -74,14 +76,13 @@ server {
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
         proxy_set_header X-Real-IP          \$remote_addr;
-        proxy_request_buffering off;
-        proxy_buffering off;
+        # proxy_request_buffering off;
+        # proxy_buffering off; 
 
         # Websocket Header 
         $websocket_headers
     }
 
-    listen [::]:$new_external_port ssl ipv6only=on; # managed by Certbot
     listen $new_external_port ssl; # managed by Certbot
     ssl_certificate /etc/letsencrypt/live/$fqdn/fullchain.pem; # managed by Certbot
     ssl_certificate_key /etc/letsencrypt/live/$fqdn/privkey.pem; # managed by Certbot
@@ -90,8 +91,7 @@ server {
 }
 
 server {
-    listen $new_internal_port;
-    listen [::]:$new_internal_port;
+    listen $new_external_port;
     server_name $fqdn;
 
     # Umleitung zu HTTPS auf demselben Port
@@ -129,9 +129,10 @@ EOF
     cat <<EOF > "$conf_file"
 server {
     listen 80;
-    listen [::]:80;
 
     server_name $fqdn;
+
+    client_max_body_size 100M;
 
     location / {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
@@ -142,8 +143,8 @@ server {
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
         proxy_set_header X-Real-IP          \$remote_addr;
-        proxy_request_buffering off;
-        proxy_buffering off;
+        # proxy_request_buffering off;
+        # proxy_buffering off; 
 
         # Websocket Header 
         $websocket_headers
@@ -169,6 +170,8 @@ server {
 
     server_name $fqdn;
 
+    client_max_body_size 100M;
+
     location / {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
 
@@ -178,14 +181,13 @@ server {
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
         proxy_set_header X-Real-IP          \$remote_addr;
-        proxy_request_buffering off;
-        proxy_buffering off;        
+        # proxy_request_buffering off;
+        # proxy_buffering off;        
 
         # Websocket Header 
         $websocket_headers
     }
 
-    listen [::]:$external_port ssl ipv6only=on; # managed by Certbot
     listen $external_port ssl; # managed by Certbot
     ssl_certificate /etc/letsencrypt/live/$fqdn/fullchain.pem; # managed by Certbot
     ssl_certificate_key /etc/letsencrypt/live/$fqdn/privkey.pem; # managed by Certbot
@@ -194,8 +196,7 @@ server {
 }
 
 server {
-    listen $internal_port;
-    listen [::]:$internal_port;
+    listen $external_port;
     server_name $fqdn;
 
     # Umleitung zu HTTPS auf demselben Port
