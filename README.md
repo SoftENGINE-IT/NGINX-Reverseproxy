@@ -43,6 +43,8 @@ server {
 
     server_name meine-domain.example.com;
 
+    client_max_body_size 100M;
+
     location / {
         proxy_pass https://192.168.1.10:8080/;
 
@@ -52,8 +54,8 @@ server {
         proxy_set_header X-Forwarded-Proto  $scheme;
         proxy_set_header X-Forwarded-For    $remote_addr;
         proxy_set_header X-Real-IP          $remote_addr;
-        proxy_request_buffering off;
-        proxy_buffering off;
+        # proxy_request_buffering off;
+        # proxy_buffering off;
 
         # Websocket Header
         proxy_set_header Upgrade            $http_upgrade;
@@ -61,7 +63,6 @@ server {
         proxy_http_version 1.1;
     }
 
-    listen [::]:443 ssl ipv6only=on; # managed by Certbot
     listen 443 ssl; # managed by Certbot
     ssl_certificate /etc/letsencrypt/live/meine-domain.example.com/fullchain.pem; # managed by Certbot
     ssl_certificate_key /etc/letsencrypt/live/meine-domain.example.com/privkey.pem; # managed by Certbot
@@ -71,7 +72,6 @@ server {
 
 server {
     listen 80;
-    listen [::]:80;
     server_name meine-domain.example.com;
 
     # Umleitung zu HTTPS auf demselben Port
