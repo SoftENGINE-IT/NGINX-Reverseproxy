@@ -24,12 +24,9 @@ elif [ "$option" -eq 2 ]; then
     
     # Websocket-Aktivierung abfragen
     read -p "Sollen Websockets aktiviert werden? (y/n): " enable_websockets
-    
-    # Extrahiere die Subdomain aus dem FQDN
-    subdomain=$(echo "$fqdn" | cut -d '.' -f1)
 
     # Dateiname für die Konfigurationsdatei
-    conf_file="/etc/nginx/conf.d/${subdomain}.conf"
+    conf_file="/etc/nginx/conf.d/${$fqdn}.conf"
 
     # Prüfen, ob die Konfigurationsdatei bereits existiert
     if [ -f "$conf_file" ]; then
@@ -71,7 +68,7 @@ server {
         proxy_pass $new_foreward_scheme://$new_internal_ip:$new_internal_port/;
 
         # Default Header
-        proxy_set_header Host \$host;
+        proxy_set_header Host               \$host;
         proxy_set_header X-Forwarded-Scheme \$scheme;
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
@@ -138,7 +135,7 @@ server {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
 
         # Default Header
-        proxy_set_header Host \$host;
+        proxy_set_header Host               \$host;
         proxy_set_header X-Forwarded-Scheme \$scheme;
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
@@ -176,7 +173,7 @@ server {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
 
         # Default Header
-        proxy_set_header Host \$host;
+        proxy_set_header Host               \$host;
         proxy_set_header X-Forwarded-Scheme \$scheme;
         proxy_set_header X-Forwarded-Proto  \$scheme;
         proxy_set_header X-Forwarded-For    \$remote_addr;
