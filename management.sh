@@ -26,7 +26,7 @@ elif [ "$option" -eq 2 ]; then
     read -p "Sollen Websockets aktiviert werden? (y/n): " enable_websockets
 
     # Dateiname für die Konfigurationsdatei
-    conf_file="/etc/nginx/conf.d/${$fqdn}.conf"
+    conf_file="/etc/nginx/conf.d/$fqdn.conf"
 
     # Prüfen, ob die Konfigurationsdatei bereits existiert
     if [ -f "$conf_file" ]; then
