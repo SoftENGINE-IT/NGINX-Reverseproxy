@@ -5,7 +5,7 @@ Dieses Bash-Skript vereinfacht die Verwaltung von Proxy-Hosts auf einem Debian 1
 ## Funktionen
 
 - **Installation der Umgebung auf einem Debian 12-System**
-- **Erstellung eines neuen Proxy-Hosts** mit benutzerdefinierten Einstellungen
+- **Erstellung eines neuen Proxy-Hosts** mit mit interaktivem Skript oder durch direktes anhängen von Parametern
 - **Option zur Aktivierung von Websockets**: Möglichkeit, Websocket-Header automatisch zu aktivieren oder auszukommentieren
 - **SSL-Zertifikate** durch Certbot Integration für automatische Zertifikaterstellung und Updates
 
@@ -24,10 +24,29 @@ Dieses Bash-Skript vereinfacht die Verwaltung von Proxy-Hosts auf einem Debian 1
 2. Ausführbar machen der Skripte:
    ```bash
     chmod +x management.sh && chmod +x setup.sh
-3. Ausführen des management Skriptes:
+3. Ausführen des interaktiven management Skriptes:
    ```bash
    ./management.sh
 
+### Ausführung mit Parametern
+Die gewünschten Optionen müssen durch Leerzeichen getrennt, genau in der vorgegebenen Reihenfolge eingegeben werden. Diese wäre:
+
+- Domain
+- interne IP-Adresse
+- Protokoll | http oder https
+- Websockest aktivieren? | "y" oder "n"
+- interner Anwendungs-Port
+- externer Port
+
+
+Schema:
+```bash
+./management.sh <Domain> <interne IP> <Protokoll> <Websockets aktivieren? y/n> <interner Port> <externer Port>
+```
+Konkretes Beispiel:
+```bash
+./management.sh subdomain.example.com 192.168.0.123 http y 8080 443
+```
 ## Funktion
 
 Grundsätzlich installiert das Skipt automatisch NGINX und Certbot mit allen Abhängigkeiten für NGINX zur Verwendung als Reverseproxy mit lokal gemanageden Zertifikaten, die auch automatisch erneuert werden.
@@ -55,7 +74,7 @@ server {
         proxy_set_header X-Forwarded-For    $remote_addr;
         proxy_set_header X-Real-IP          $remote_addr;
         # proxy_request_buffering off;
-        # proxy_buffering off;
+        # proxy_buffering off;  
 
         # Websocket Header
         proxy_set_header Upgrade            $http_upgrade;
