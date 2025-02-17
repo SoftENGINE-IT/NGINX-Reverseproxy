@@ -5,7 +5,7 @@ Dieses Bash-Skript vereinfacht die Verwaltung von Proxy-Hosts auf einem Debian 1
 ## Funktionen
 
 - **Installation der Umgebung auf einem Debian 12-System**
-- **Erstellung eines neuen Proxy-Hosts** mit mit interaktivem Skript oder durch direktes anhängen von Parametern
+- **Erstellung eines neuen Proxy-Hosts** mit interaktivem Skript oder durch direktes anhängen von Parametern
 - **Option zur Aktivierung von Websockets**: Möglichkeit, Websocket-Header automatisch zu aktivieren oder auszukommentieren
 - **SSL-Zertifikate** durch Certbot Integration für automatische Zertifikaterstellung und Updates
 
