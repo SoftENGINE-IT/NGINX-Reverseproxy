@@ -29,4 +29,8 @@ else
   echo "Zertifikat existiert bereits – wird nicht überschrieben."
 fi
 
+rm /etc/nginx/sites-enabled/default
+
+nginx -s reload
+
 echo "Installation abgeschlossen."
