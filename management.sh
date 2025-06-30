@@ -99,10 +99,15 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
     client_max_body_size 100M;
 
     location / {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
+
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-Scheme \$scheme;
         proxy_set_header X-Forwarded-Proto \$scheme;
@@ -125,12 +130,17 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+
     client_max_body_size 100M;
 
     error_page 497 https://\$host:$external_port\$request_uri;
 
     location / {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
+
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-Scheme \$scheme;
         proxy_set_header X-Forwarded-Proto \$scheme;
