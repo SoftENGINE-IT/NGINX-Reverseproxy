@@ -145,7 +145,7 @@ server {
     client_max_body_size 100M;
 
     # Weiterleitung zum verschlüsselten https Port
-    # Hier wegen des Abweichen vom den Standard http/https Ports über das Abfangen eines Umzusetzen
+    # Hier wegen des Abweichen vom den Standard http/https Ports über das Abfangen eines Error 497 Umzusetzen
     # Falls nicht hinzugefügt, kommt beim Aufrufen der http Seite der Fehler: "The plain HTTP request was sent to a HTTPS port"
     error_page 497 https://\$host:$external_port\$request_uri;
 
