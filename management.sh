@@ -87,6 +87,8 @@ EOF
 server {
     listen 80;
     server_name $fqdn;
+
+    # Weiterleitung zum verschlüsselten https Port
     return 301 https://\$host$request_uri;
 }
 
@@ -94,20 +96,25 @@ server {
     listen 443 ssl;
     server_name $fqdn;
 
+    # Zertifikat
     ssl_certificate /etc/letsencrypt/live/$fqdn/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$fqdn/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    # Proxy-Host Weiter default HSTS Header 
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 
+    # Maximale Größe an Files, die übertragen werden darf
     client_max_body_size 100M;
 
     location / {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
 
+        # Exklusiver HSTS Header, da weitere set_header in der location vorhanden sind
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 
+        # Default Header    
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-Scheme \$scheme;
         proxy_set_header X-Forwarded-Proto \$scheme;
@@ -125,22 +132,30 @@ server {
     listen $external_port ssl;
     server_name $fqdn;
 
+    # Zertifikat
     ssl_certificate /etc/letsencrypt/live/$fqdn/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/$fqdn/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    # Proxy-Host Weiter default HSTS Header
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
 
+    # Maximale Größe an Files, die übertragen werden darf
     client_max_body_size 100M;
 
+    # Weiterleitung zum verschlüsselten https Port
+    # Hier wegen des Abweichen vom den Standard http/https Ports über das Abfangen eines Umzusetzen
+    # Falls nicht hinzugefügt, kommt beim Aufrufen der http Seite der Fehler: "The plain HTTP request was sent to a HTTPS port"
     error_page 497 https://\$host:$external_port\$request_uri;
 
     location / {
         proxy_pass $foreward_scheme://$internal_ip:$internal_port/;
 
+        # Exklusiver HSTS Header, da weitere set_header in der location vorhanden sind
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
-        
+
+        # Default Header 
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-Scheme \$scheme;
         proxy_set_header X-Forwarded-Proto \$scheme;

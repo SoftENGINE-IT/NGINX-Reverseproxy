@@ -13,7 +13,7 @@ mkdir -p /usr/share/nginx/html/
 mkdir -p /etc/nginx/conf.d/
 mkdir -p /etc/nginx/ssl/
 
-# Kopieren der Ressourcen
+# Kopieren der Catch-All Ressourcen
 cp ./install/404.html /usr/share/nginx/html/
 cp ./install/catch-all.conf /etc/nginx/conf.d/
 
@@ -29,8 +29,10 @@ else
   echo "Zertifikat existiert bereits – wird nicht überschrieben."
 fi
 
+# Entfernen der Standardkonfiguration, damit es keine Konflikte mit dem Catch-All gibt
 rm /etc/nginx/sites-enabled/default
 
+# Reload der NGINX-Konfiguration nach dem Entfernen der Standardkonfiguration
 nginx -s reload
 
 echo "Installation abgeschlossen."
