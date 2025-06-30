@@ -72,11 +72,13 @@ EOF
     rm "$conf_file"
 
     if [ "$enable_websockets" == "y" ]; then
-        websocket_headers="proxy_set_header Upgrade \$http_upgrade;
+        websocket_headers=" # Websocket Header
+    proxy_set_header Upgrade \$http_upgrade;
     proxy_set_header Connection \$http_connection;
     proxy_http_version 1.1;"
     else
-        websocket_headers="# proxy_set_header Upgrade \$http_upgrade;
+        websocket_headers="# Websocket Header
+    # proxy_set_header Upgrade \$http_upgrade;
     # proxy_set_header Connection \$http_connection;
     # proxy_http_version 1.1;"
     fi

@@ -31,6 +31,7 @@ fi
 
 # Entfernen der Standardkonfiguration, damit es keine Konflikte mit dem Catch-All gibt
 rm /etc/nginx/sites-enabled/default
+rm /etc/nginx/sites-available/default
 
 # Reload der NGINX-Konfiguration nach dem Entfernen der Standardkonfiguration
 nginx -s reload
