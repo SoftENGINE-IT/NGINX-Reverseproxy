@@ -13,15 +13,23 @@ else
     echo "Was möchten Sie tun?"
     echo "-------------------------------------------------------"
     echo ""
-    echo "1: Installation der Umgebung auf einem Debian12 System"
+    echo "1: Installation der Umgebung auf einem Debian13 System"
     echo "2: Erstellung eines neuen ProxyHosts"
+    echo "3: Setup für Remote-Ausführung via SSH"
     echo ""
     read -p "Wählen Sie eine Option (1 oder 2): " option
 fi
 
 if [ "$option" -eq 1 ]; then
-    echo "Starte die Installation der Umgebung auf einem Debian12 System..."
+    echo "Starte die Installation der Umgebung auf einem Debian13 System..."
     ./setup.sh
+    echo "Installation abgeschlossen."
+    exit 0
+fi
+
+if [ "$option" -eq 3 ]; then
+    echo "Starte die Installation der Umgebung auf einem Debian13 System..."
+    ./setup_for_remote_execution.sh
     echo "Installation abgeschlossen."
     exit 0
 fi
