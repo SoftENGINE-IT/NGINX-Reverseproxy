@@ -1,17 +1,18 @@
 # NGINX Proxy Host Management Script
 
-Dieses Bash-Skript vereinfacht die Verwaltung von Proxy-Hosts auf einem Debian 12 System. Es ermöglicht die Installation einer Umgebung sowie das Hinzufügen und Konfigurieren neuer Proxy-Hosts auf NGINX, einschließlich der Möglichkeit zur Aktivierung von Websocket-Headern.
+Dieses Bash-Skript vereinfacht die Verwaltung von Proxy-Hosts auf einem Debian 13 System. Es ermöglicht die Installation einer Umgebung sowie das Hinzufügen und Konfigurieren neuer Proxy-Hosts auf NGINX, einschließlich der Möglichkeit zur Aktivierung von Websocket-Headern.
 
 ## Funktionen
 
-- **Installation der Umgebung auf einem Debian 12-System**
+- **Installation der Umgebung auf einem Debian 13-System**
 - **Erstellung eines neuen Proxy-Hosts** mit interaktivem Skript oder durch direktes anhängen von Parametern
 - **Option zur Aktivierung von Websockets**: Möglichkeit, Websocket-Header automatisch zu aktivieren oder auszukommentieren
 - **SSL-Zertifikate** durch Certbot Integration für automatische Zertifikaterstellung und Updates
+- **Secure Remote Execution Setup** durch erstellung eines neuen Benutzers mit minimalen Rechten
 
 ## Voraussetzungen
 
-- Debian 12
+- Debian 13
 - Root- oder sudo-Zugriff
 - Portforewarding zum Zielsystem mit dem Ports 80 und 443 (und ggf. andere gebrauchte)
 
@@ -47,6 +48,17 @@ Konkretes Beispiel:
 ```bash
 ./management.sh subdomain.example.com 192.168.0.123 http y 8080 443
 ```
+## Secure Remote Execution
+
+Die sichere Ausfürhrung des management Skripts von einem entfernten Gerät funktioniert so, dass ein im Skript anpassbarer Benutzer erstellt wird. Dieser Benutzer (im Standard autonginx) bekommt durch das hinzufügen des Skripts in die Sudoers Datei mit dem Parameter **NOPASSWD** gefolgt vom Verzeichnis, in dem sich das management.sh Skript befindet, exklusives sudorechte nur mit einem SSH-Key-Pair für diese Datei in genau diesem Pfad.
+Beispiel für einen solchen Eintrag:
+
+```bash
+autonginx ALL=(ALL) NOPASSWD: /opt/NGINX-Reverseproxy/management.sh
+```
+
+Durch das Eintragen des bereitgestellten public-Keys in authorized_keys des neu erstellten Benutzers, ist es dann nur per ssh Aufruf mit genau dem zugehörigen Private-Key möglich, die Datei auszuführen, wenn man diesen Key besitzt, sowie den SSH Port kennt und den genauen Pfad der management.sh Datei hat.
+
 ## Funktion
 
 Grundsätzlich installiert das Skipt automatisch NGINX und Certbot mit allen Abhängigkeiten für NGINX zur Verwendung als Reverseproxy mit lokal gemanageden Zertifikaten, die auch automatisch erneuert werden.
