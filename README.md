@@ -327,7 +327,7 @@ server {
 }
 ```
 
-### Beispiel einer generierten Konfiguration
+### Verhalten bei non Standard Ports
 
 Bei abweichenden Standardports kommt es normalerweise zu einem Problem, da automatische http rewrites zu https im Standard nur möglich sind, da der Website technisch einmal unverschlüsselt auf Port 80 und einmal verschlüsselt auf Port 443 bereit stellt. Diese Ports sind der Standard und müssen im BRowser nicht explizit angegeben werden. Führt der Browser nun nicht selbst, wie viele Chromium basierte es mittlwereile tun, einen https rewrite durch, so wurde bei einem externen Port 8080 ein Fehler kommen, dass versucht wird eine https Webite per http zu besuchen.
 
