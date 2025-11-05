@@ -35,12 +35,6 @@ pip install .
 pip install -e .
 ```
 
-### Methode 2: Mit pip (wenn veröffentlicht)
-
-```bash
-pip install nrp
-```
-
 ## Erste Schritte
 
 ### 1. System Setup
@@ -57,7 +51,49 @@ Das Setup führt folgende Schritte durch:
 - Einrichtung einer Catch-All Konfiguration
 - Entfernung der Standard-NGINX-Konfiguration
 
-### 2. Proxy-Host hinzufügen
+### 2. Konfiguration prüfen und anpassen
+
+In der `nrp/config.py` finden sich alle anpassbaren Parameter/Variablen der verwendeten Programme. 
+
+```python
+"""
+Configuration settings for NRP
+"""
+from pathlib import Path
+
+# NGINX Configuration
+NGINX_CONF_DIR = Path("/etc/nginx/conf.d")
+NGINX_HTML_DIR = Path("/usr/share/nginx/html")
+NGINX_SSL_DIR = Path("/etc/nginx/ssl")
+
+# LetsEncrypt Configuration
+LETSENCRYPT_DIR = Path("/etc/letsencrypt")
+LETSENCRYPT_LIVE_DIR = LETSENCRYPT_DIR / "live"
+LETSENCRYPT_OPTIONS_SSL = LETSENCRYPT_DIR / "options-ssl-nginx.conf"
+LETSENCRYPT_SSL_DHPARAM = LETSENCRYPT_DIR / "ssl-dhparams.pem"
+
+# Remote Execution Settings
+DEFAULT_REMOTE_USER = "autonginx"
+DEFAULT_SCRIPT_PATH = "/opt/NGINX-Reverseproxy"
+
+# Template Directory (relative to this file)
+TEMPLATE_DIR = Path(__file__).parent / "templates"
+
+# Default Values
+DEFAULT_CLIENT_MAX_BODY_SIZE = "100M"
+DEFAULT_HSTS_MAX_AGE = 31536000  # 1 year in seconds
+
+```
+
+Alle hier aufgelisteten Verzeichnisse können theoretisch angepasst werden, jedoch muss danach sichergestellt werden, dass der ausführende Benutzer die entsprechenden Berechtigungen dafür hat, genau wie certbot und der Webserver NGINX.
+
+Was bedenkenlos angepasst werden kann sind `DEFAULT_CLIENT_MAX_BODY_SIZE` und `DEFAULT_HSTS_MAX_AGE`.
+
+`DEFAULT_CLIENT_MAX_BODY_SIZE` bestimmt wie groß dass Dateien maximal sein dürfen, falls buffering deaktiviert wurde. Dabei sind jedoch nach Best Practices der niedrigste mögliche Wert empfohlen für die daheinter leigende Anwendung. Muss ich also z.B. für eine Website maximal Dateien hochladen, die 150MB groß sind, so sollte ich den Wert auf 150M setzen. Dieser Wert kann daher auch verwendet werden, um das hochladen von zu großen Files durch Ungeschulte zu unterbinden.
+
+`DEFAULT_HSTS_MAX_AGE` bestimmt wie lange der benutzer Web-Browser sich merkt, dass für diese Website https (also eine TLS Verschlüsselung aller gesendeter Daten) erzwungen ist. Dies stellt sicher, dass selbst fest hinterlegte http Links mit https aufgerufen werden. Außerdem verringert es die Kommunikation zwischen Client und Server, da nicht jedes Mal beim Server angefragt werden muss, um die Verbindung upzugraden. Außerdem stellt es Verschlüsslung sicher, selbst wenn der Webserver keinen automatischen rewrite zu 443 haben sollte. Für HSTS empfehlen sich nach Industriestandard Werte ab einem halben Jahr.
+
+### 3. Proxy-Host hinzufügen
 
 #### Interaktiv (empfohlen für Einsteiger)
 
@@ -90,7 +126,7 @@ Kurzform:
 nrp add example.com -i 192.168.1.10 -p 8080
 ```
 
-### 3. Weitere Befehle
+### 4. Weitere Befehle
 
 ```bash
 # Alle Proxy-Hosts auflisten
@@ -290,6 +326,12 @@ server {
     }
 }
 ```
+
+### Beispiel einer generierten Konfiguration
+
+Bei abweichenden Standardports kommt es normalerweise zu einem Problem, da automatische http rewrites zu https im Standard nur möglich sind, da der Website technisch einmal unverschlüsselt auf Port 80 und einmal verschlüsselt auf Port 443 bereit stellt. Diese Ports sind der Standard und müssen im BRowser nicht explizit angegeben werden. Führt der Browser nun nicht selbst, wie viele Chromium basierte es mittlwereile tun, einen https rewrite durch, so wurde bei einem externen Port 8080 ein Fehler kommen, dass versucht wird eine https Webite per http zu besuchen.
+
+Hierfür wird die `error_page` Direktive benutzt. Der Fehlercode `497` fängt dabei genau dieses Verhalten ab und erlaubt eine entprechende, abweichende Reaktion für den Webserver zu hinterlegen. In diesem Fall ein Upgrade der Sesion zu https.
 
 ## Fehlerbehebung
 
