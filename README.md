@@ -21,18 +21,23 @@ Modernes Python CLI-Tool zur Verwaltung von NGINX Reverse Proxy Konfigurationen 
 
 ## Installation
 
-### Methode 1: Von GitHub (empfohlen)
-
 ```bash
 # Repository klonen
 git clone https://github.com/SoftENGINE-IT/NGINX-Reverseproxy.git
 cd NGINX-Reverseproxy
+
+# Python venv erstellen & aktivieren
+python3 -m venv venv
+source venv/bin/activate
 
 # Installieren
 pip install .
 
 # Oder für Entwicklung
 pip install -e .
+
+# Symlink hinterlegen für eine Ausführung auch ohne das venv zu aktivieren
+sudo ln -s /opt/NGINX-Reverseproxy/venv/bin/nrp /usr/local/bin/nrp
 ```
 
 ## Erste Schritte
