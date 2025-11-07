@@ -317,7 +317,8 @@ nrp completion --shell bash
 
 **Was wird aktiviert:**
 - Vervollständigung von Befehlen: `nrp <TAB>`
-- Vervollständigung von Optionen: `nrp add --<TAB>`
+- Vervollständigung von Optionen: `nrp add - <TAB>`
+- Vervollständigung von Optionen: `nrp add -- <TAB>`
 - Vervollständigung von Domains: `nrp remove <TAB>` zeigt alle konfigurierten Hosts
 
 ## Secure Remote Execution
