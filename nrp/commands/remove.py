@@ -30,7 +30,7 @@ def complete_domains(ctx, param, incomplete):
 
 
 @click.command()
-@click.argument('fqdn', autocompletion=complete_domains)
+@click.argument('fqdn', shell_complete=complete_domains)
 @click.option('--keep-cert', is_flag=True, help='Zertifikat behalten (nicht löschen)')
 def remove(fqdn, keep_cert):
     """
