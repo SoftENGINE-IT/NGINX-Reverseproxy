@@ -2,7 +2,37 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
-## [2.0.0] - 2024
+## [2.2.1] - 2025
+
+### Bugfix
+
+- **Shell-Completion**
+Die Shell Completion führte zu Fehlern wegen eines falschen aufruf des python click Parameters.
+  - Vorher (falsch):
+    @click.argument('fqdn', autocompletion=complete_domains)
+
+  - Jetzt (richtig):
+    @click.argument('fqdn', shell_complete=complete_domains)
+
+## [2.2.0] - 2025
+
+### Hinzugefügt
+
+- **Neue CLI-Befehle**
+  - `nrp completion` - Hinzufügen von Shell completion für Befehle und Optionen
+
+## [2.1.0] - 2025
+
+### Hinzugefügt
+
+- **Neue add Option**
+  - `--full-interactive` - frägt bei einem reinen `nrp add` alle Optionen ab
+
+- **Verbesserungen**
+  - Symlink bei der Instalaltion für ein Ausführen des Tools ohne aktives venv 
+
+### Verbeserungen
+## [2.0.0] - 2025
 
 ### Hinzugefügt
 
