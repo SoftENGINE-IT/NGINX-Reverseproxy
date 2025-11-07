@@ -9,8 +9,28 @@ from nrp.core.validation import validate_config_exists
 from nrp.config import NGINX_CONF_DIR
 
 
+def complete_domains(ctx, param, incomplete):
+    """
+    Auto-complete existing domains for removal
+
+    Args:
+        ctx: Click context
+        param: Parameter being completed
+        incomplete: Current incomplete input
+
+    Returns:
+        List of matching domain names
+    """
+    try:
+        nginx = NginxManager()
+        domains = nginx.list_configs()
+        return [d for d in domains if d.startswith(incomplete)]
+    except Exception:
+        return []
+
+
 @click.command()
-@click.argument('fqdn')
+@click.argument('fqdn', autocompletion=complete_domains)
 @click.option('--keep-cert', is_flag=True, help='Zertifikat behalten (nicht löschen)')
 def remove(fqdn, keep_cert):
     """

@@ -56,6 +56,23 @@ Das Setup führt folgende Schritte durch:
 - Einrichtung einer Catch-All Konfiguration
 - Entfernung der Standard-NGINX-Konfiguration
 
+### 1b. Shell-Completion aktivieren (optional, empfohlen)
+
+```bash
+# Automatische Installation für Ihre Shell
+nrp completion
+
+# Oder manuell für Bash
+_NRP_COMPLETE=bash_source nrp > ~/.nrp-complete.bash
+echo 'source ~/.nrp-complete.bash' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**Danach verfügbar:**
+- `nrp <TAB>` - Zeigt alle Befehle
+- `nrp add --<TAB>` - Zeigt alle Optionen
+- `nrp remove <TAB>` - Zeigt konfigurierte Domains
+
 ### 2. Konfiguration prüfen und anpassen
 
 In der `nrp/config.py` finden sich alle anpassbaren Parameter/Variablen der verwendeten Programme. 
@@ -277,6 +294,32 @@ sudo nrp remote-setup [OPTIONS]
 sudo nrp remote-setup --user myuser --public-key ~/.ssh/id_ed25519.pub
 ```
 
+### `nrp completion`
+
+Installiert Shell-Completion (Tab-Vervollständigung).
+
+```bash
+nrp completion [--shell SHELL]
+```
+
+**Optionen:**
+- `--shell [bash|zsh|fish]`: Shell-Typ (wird automatisch erkannt)
+
+**Beispiel:**
+
+```bash
+# Automatische Erkennung
+nrp completion
+
+# Spezifische Shell
+nrp completion --shell bash
+```
+
+**Was wird aktiviert:**
+- Vervollständigung von Befehlen: `nrp <TAB>`
+- Vervollständigung von Optionen: `nrp add --<TAB>`
+- Vervollständigung von Domains: `nrp remove <TAB>` zeigt alle konfigurierten Hosts
+
 ## Secure Remote Execution
 
 Die sichere Remote-Ausführung ermöglicht es, das Tool von einem entfernten System aus zu verwenden:
@@ -449,12 +492,13 @@ NRPv2/
 │   ├── cli.py                    # CLI Entry Point
 │   ├── config.py                 # Konfiguration
 │   ├── commands/                 # CLI Commands
-│   │   ├── add.py
-│   │   ├── remove.py
-│   │   ├── list_cmd.py
-│   │   ├── status.py
-│   │   ├── setup.py
-│   │   └── remote_setup.py
+│   │   ├── add.py               # Host hinzufügen
+│   │   ├── remove.py            # Host entfernen (mit Domain-Completion)
+│   │   ├── list_cmd.py          # Hosts auflisten
+│   │   ├── status.py            # Status anzeigen
+│   │   ├── setup.py             # System Setup
+│   │   ├── remote_setup.py      # Remote Execution Setup
+│   │   └── completion.py        # Shell-Completion Installation
 │   ├── core/                     # Core Funktionalität
 │   │   ├── nginx.py
 │   │   ├── certbot.py
@@ -470,6 +514,7 @@ NRPv2/
 ├── requirements.txt
 ├── README.md
 ├── MIGRATION.md
+├── COMPLETION.md                 # Shell-Completion Anleitung
 └── LICENSE
 ```
 
