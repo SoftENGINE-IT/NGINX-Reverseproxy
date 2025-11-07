@@ -100,21 +100,37 @@ Was bedenkenlos angepasst werden kann sind `DEFAULT_CLIENT_MAX_BODY_SIZE` und `D
 
 ### 3. Proxy-Host hinzufügen
 
-#### Interaktiv (empfohlen für Einsteiger)
+#### Interaktiv - Basis-Modus (empfohlen für Einsteiger)
 
 ```bash
 nrp add
 ```
 
-Das Tool fragt immer nach:
+Das Tool fragt nach den wichtigsten Parametern:
 - FQDN (z.B. `api.example.com`)
 - Interne IP-Adresse (z.B. `192.168.1.10`)
 - Interner Port (z.B. `8080`)
+- Websockets aktivieren (ja/nein)
 
-Hier wird immer mit deaktivierten Websockets und einer externen erreichbarkeit auf dem Port 443 erstellt.
-Zusätzliche Optionen müssen bei dem `nrp add` Befehl direkt mitgegeben werden. 
+**Standard-Werte:**
+- Externer Port: `443`
+- Forward Scheme: `http`
+- E-Mail: keine
 
-Mehr dazu findet sich im Bereich [CLI-Referenz](#cli-referenz)
+#### Interaktiv - Vollständiger Modus
+
+```bash
+nrp add --full-interactive
+# oder kurz:
+nrp add -f
+```
+
+Das Tool fragt nach **allen** verfügbaren Optionen:
+- FQDN, Interne IP, Interner Port, Websockets (wie oben)
+- **Plus:** Externer Port, Forward Scheme (http/https), E-Mail für LetsEncrypt
+
+Ideal für benutzerdefinierte Konfigurationen.
+Weitere Infos zu den Optionen finden sich im Bereich [CLI-Referenz](#cli-referenz)
 
 #### Mit Parametern (für Automatisierung)
 
@@ -180,11 +196,19 @@ nrp add [FQDN] [OPTIONS]
 - `-w, --websockets / -nw, --no-websockets`: Websockets aktivieren
 - `--email TEXT`: E-Mail für LetsEncrypt Benachrichtigungen
 - `-o, --overwrite`: Bestehende Konfiguration überschreiben
+- `-f, --full-interactive`: Alle Optionen interaktiv abfragen (statt nur Basis-Parameter)
 
 **Beispiele:**
 
 ```bash
-# Minimale Angaben
+# Interaktiv (Basis) - fragt nur FQDN, IP, Port, Websockets
+nrp add
+
+# Interaktiv (Vollständig) - fragt ALLE Optionen
+nrp add --full-interactive
+nrp add -f
+
+# Minimale Angaben per Parameter
 nrp add api.example.com -i 192.168.1.10 -p 8080
 
 # Mit Websockets

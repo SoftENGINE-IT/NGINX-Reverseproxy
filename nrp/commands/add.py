@@ -22,10 +22,11 @@ from nrp.config import NGINX_CONF_DIR
 @click.option('--internal-port', '-p', type=int, help='Interner Port des Servers')
 @click.option('--external-port', '-e', type=int, default=443, help='Externer Port (Standard: 443)')
 @click.option('--protocol', '-s', type=click.Choice(['http', 'https'], case_sensitive=False), default='http', help='Forward Scheme (http oder https)')
-@click.option('--websockets/--no-websockets', '-w/-nw', default=False, help='Websockets aktivieren')
+@click.option('--websockets/--no-websockets', '-w/-nw', default=None, help='Websockets aktivieren')
 @click.option('--email', help='E-Mail für LetsEncrypt Benachrichtigungen')
 @click.option('--overwrite', '-o', is_flag=True, help='Bestehende Konfiguration überschreiben')
-def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, email, overwrite):
+@click.option('--full-interactive', '-f', is_flag=True, help='Alle Optionen interaktiv abfragen')
+def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, email, overwrite, full_interactive):
     """
     Erstellt einen neuen Proxy-Host
 
@@ -35,7 +36,9 @@ def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, e
 
         nrp add test.example.com -i 192.168.1.20 -p 3000 -e 8443 -s https -w
 
-        nrp add (interaktiv)
+        nrp add (interaktiv - nur Basis-Optionen)
+
+        nrp add --full-interactive (interaktiv - alle Optionen)
     """
     nginx = NginxManager()
     certbot = CertbotManager()
@@ -78,13 +81,35 @@ def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, e
         click.echo(click.style(f'Ungültiger Port: {internal_port}', fg='red'))
         return
 
+    # Full interactive mode - ask for all options
+    if full_interactive:
+        click.echo(click.style('\n--- Erweiterte Optionen ---', fg='cyan'))
+
+        # External port
+        external_port = click.prompt('Externer Port', type=int, default=443)
+
+        # Protocol
+        protocol = click.prompt(
+            'Forward Scheme',
+            type=click.Choice(['http', 'https'], case_sensitive=False),
+            default='http'
+        )
+
+        # Email for certificates
+        if click.confirm('E-Mail für LetsEncrypt Benachrichtigungen angeben?', default=False):
+            email = click.prompt('E-Mail-Adresse', type=str)
+
+        # Websockets
+        websockets = click.confirm('Websockets aktivieren?', default=False)
+    else:
+        # Standard interactive mode - only ask for websockets
+        if websockets is None:
+            websockets = click.confirm('Websockets aktivieren?', default=False)
+
+    # Validate external port if provided
     if external_port and not validate_port(external_port):
         click.echo(click.style(f'Ungültiger externer Port: {external_port}', fg='red'))
         return
-
-    # Ask for websockets if not specified
-    if websockets is None:
-        websockets = click.confirm('Websockets aktivieren?', default=False)
 
     click.echo(f'\nErstelle Proxy-Host für {fqdn}...')
 
