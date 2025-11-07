@@ -106,13 +106,15 @@ Was bedenkenlos angepasst werden kann sind `DEFAULT_CLIENT_MAX_BODY_SIZE` und `D
 nrp add
 ```
 
-Das Tool fragt nach:
+Das Tool fragt immer nach:
 - FQDN (z.B. `api.example.com`)
 - Interne IP-Adresse (z.B. `192.168.1.10`)
 - Interner Port (z.B. `8080`)
-- Externer Port (Standard: `443`)
-- Protokoll (`http` oder `https`)
-- Websockets aktivieren (ja/nein)
+
+Hier wird immer mit deaktivierten Websockets und einer externen erreichbarkeit auf dem Port 443 erstellt.
+Zusätzliche Optionen müssen bei dem `nrp add` Befehl direkt mitgegeben werden. 
+
+Mehr dazu findet sich im Bereich [CLI-Referenz](#cli-referenz)
 
 #### Mit Parametern (für Automatisierung)
 
