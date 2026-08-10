@@ -790,6 +790,10 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
     client_max_body_size 100M;
 
+    # Coraza WAF mit globalem Regelwerk (OWASP Core Rule Set)
+    coraza on;
+    coraza_rules_file /etc/nginx/coraza/main.conf;
+
     location / {
         proxy_pass http://192.168.1.10:8080/;
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
@@ -807,6 +811,8 @@ server {
     }
 }
 ```
+
+> **Hinweis:** Die Coraza-Direktiven (`coraza on;` / `coraza_rules_file …;`) werden nur bei aktivierter WAF (`nrp add --waf`) eingetragen. Ohne `--waf` werden sie als auskommentierte Zeilen hinterlegt und können später manuell aktiviert werden (danach `nginx -t && nginx -s reload`).
 
 ### Verhalten bei non Standard Ports
 
