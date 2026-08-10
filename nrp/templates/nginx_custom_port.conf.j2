@@ -22,6 +22,15 @@ server {
     # Falls nicht hinzugefügt, kommt beim Aufrufen der http Seite der Fehler: "The plain HTTP request was sent to a HTTPS port"
     error_page 497 https://$host:{{ external_port }}$request_uri;
 
+{% if waf_enabled %}
+    # Coraza WAF mit globalem Regelwerk (OWASP Core Rule Set)
+    coraza on;
+    coraza_rules_file {{ waf_main_conf }};
+{% else %}
+    # Coraza WAF (deaktiviert) - aktivierbar via 'nrp add --waf'
+    # coraza on;
+    # coraza_rules_file {{ waf_main_conf }};
+{% endif %}
     location / {
         proxy_pass {{ forward_scheme }}://{{ internal_ip }}:{{ internal_port }}/;
 

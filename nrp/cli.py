@@ -23,6 +23,7 @@ def cli():
 from nrp.commands import add, remove, list_cmd, setup, remote_setup, status, completion
 from nrp.commands import site
 from nrp.commands import f2b
+from nrp.commands import waf
 
 cli.add_command(add.add)
 cli.add_command(remove.remove)
@@ -33,6 +34,7 @@ cli.add_command(status.status)
 cli.add_command(completion.completion)
 cli.add_command(site.site)
 cli.add_command(f2b.f2b)
+cli.add_command(waf.waf)
 
 
 if __name__ == '__main__':

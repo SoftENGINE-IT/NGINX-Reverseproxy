@@ -41,3 +41,18 @@ F2B_FILTER_DIR = Path("/etc/fail2ban/filter.d")
 F2B_NRP_JAIL_CONF = F2B_JAIL_DIR / "nrp.conf"
 F2B_FILTER_404 = F2B_FILTER_DIR / "nginx-404.conf"
 F2B_FILTER_SCANNERS = F2B_FILTER_DIR / "nginx-scanners.conf"
+
+# Coraza WAF Configuration
+WAF_BUILD_DIR = Path("/usr/local/src/nrp-coraza")
+WAF_CONF_DIR = Path("/etc/nginx/coraza")
+WAF_MAIN_CONF = WAF_CONF_DIR / "main.conf"
+WAF_CORAZA_CONF = WAF_CONF_DIR / "coraza.conf"
+WAF_CRS_DIR = WAF_CONF_DIR / "coreruleset"
+WAF_CRS_SETUP_CONF = WAF_CONF_DIR / "crs-setup.conf"
+WAF_AUDIT_LOG = Path("/var/log/nginx/coraza_audit.log")
+WAF_MODULE_PATH = Path("/usr/lib/nginx/modules/ngx_http_coraza_module.so")
+WAF_MODULE_LOAD_CONF = Path("/etc/nginx/modules-enabled/50-mod-http-coraza.conf")
+WAF_LIBCORAZA_REPO = "https://github.com/corazawaf/libcoraza"
+WAF_CORAZA_NGINX_REPO = "https://github.com/corazawaf/coraza-nginx"
+WAF_CRS_REPO = "https://github.com/coreruleset/coreruleset"
+WAF_CRS_VERSION = "v4.16.0"  # OWASP Core Rule Set Release-Tag

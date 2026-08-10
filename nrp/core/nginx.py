@@ -13,7 +13,8 @@ from nrp.config import (
     LETSENCRYPT_OPTIONS_SSL,
     LETSENCRYPT_SSL_DHPARAM,
     DEFAULT_CLIENT_MAX_BODY_SIZE,
-    DEFAULT_HSTS_MAX_AGE
+    DEFAULT_HSTS_MAX_AGE,
+    WAF_MAIN_CONF
 )
 
 
@@ -54,6 +55,7 @@ class NginxManager:
         external_port: int = 443,
         forward_scheme: str = "http",
         websockets_enabled: bool = False,
+        waf_enabled: bool = False,
         client_max_body_size: str = DEFAULT_CLIENT_MAX_BODY_SIZE,
         hsts_max_age: int = DEFAULT_HSTS_MAX_AGE
     ) -> Path:
@@ -67,6 +69,7 @@ class NginxManager:
             external_port: External port (default: 443)
             forward_scheme: http or https (default: http)
             websockets_enabled: Enable websocket headers (default: False)
+            waf_enabled: Enable Coraza WAF with global rule set (default: False)
             client_max_body_size: Maximum upload size (default: 100M)
             hsts_max_age: HSTS max age in seconds (default: 31536000)
 
@@ -93,6 +96,8 @@ class NginxManager:
             external_port=external_port,
             forward_scheme=forward_scheme,
             websockets_enabled=websockets_enabled,
+            waf_enabled=waf_enabled,
+            waf_main_conf=WAF_MAIN_CONF,
             ssl_certificate=ssl_certificate,
             ssl_certificate_key=ssl_certificate_key,
             ssl_options=LETSENCRYPT_OPTIONS_SSL,
