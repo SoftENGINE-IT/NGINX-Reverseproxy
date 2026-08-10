@@ -25,6 +25,15 @@ server {
     # Maximale Größe an Files, die übertragen werden darf
     client_max_body_size {{ client_max_body_size }};
 
+{% if waf_enabled %}
+    # Coraza WAF mit globalem Regelwerk (OWASP Core Rule Set)
+    coraza on;
+    coraza_rules_file {{ waf_main_conf }};
+{% else %}
+    # Coraza WAF (deaktiviert) - aktivierbar via 'nrp add --waf'
+    # coraza on;
+    # coraza_rules_file {{ waf_main_conf }};
+{% endif %}
     location / {
         proxy_pass {{ forward_scheme }}://{{ internal_ip }}:{{ internal_port }}/;
 

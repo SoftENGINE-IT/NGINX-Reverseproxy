@@ -12,6 +12,7 @@ Modernes Python CLI-Tool zur Verwaltung von NGINX Reverse Proxy Konfigurationen 
 - **Remote Execution**: Sichere Verwaltung über SSH mit eingeschränkten Benutzerrechten
 - **Validierung**: Automatische Überprüfung von Eingaben (FQDN, IP, Ports)
 - **WireGuard Site-Management**: Hub-and-Spoke-Tunnel zu entfernten Netzwerken – Dienste hinter NAT ohne Port-Forwarding veröffentlichen
+- **Coraza WAF**: Web Application Firewall ([coraza-nginx](https://github.com/corazawaf/coraza-nginx)) mit OWASP Core Rule Set – pro Proxy-Host aktivierbar
 
 ## Voraussetzungen
 
@@ -52,6 +53,9 @@ sudo nrp setup
 
 # Mit WireGuard-Unterstützung für Site-Tunnel
 sudo nrp setup --with-wireguard
+
+# Mit Coraza WAF (Build dauert einige Minuten)
+sudo nrp setup --with-waf
 ```
 
 Das Setup führt folgende Schritte durch:
@@ -61,6 +65,7 @@ Das Setup führt folgende Schritte durch:
 - Einrichtung einer Catch-All Konfiguration
 - Entfernung der Standard-NGINX-Konfiguration
 - *(Mit `--with-wireguard`)* Installation von WireGuard, Aktivierung von IP-Forwarding, Initialisierung des Hub-Interface `wg0`
+- *(Mit `--with-waf`)* Build von libcoraza und dem coraza-nginx Modul, Installation des OWASP Core Rule Set
 
 ### 1b. Shell-Completion aktivieren (optional, empfohlen)
 
@@ -127,6 +132,18 @@ F2B_FILTER_DIR = Path("/etc/fail2ban/filter.d")
 F2B_NRP_JAIL_CONF = F2B_JAIL_DIR / "nrp.conf"
 F2B_FILTER_404 = F2B_FILTER_DIR / "nginx-404.conf"
 F2B_FILTER_SCANNERS = F2B_FILTER_DIR / "nginx-scanners.conf"
+
+# Coraza WAF Configuration
+WAF_BUILD_DIR = Path("/usr/local/src/nrp-coraza")
+WAF_CONF_DIR = Path("/etc/nginx/coraza")
+WAF_MAIN_CONF = WAF_CONF_DIR / "main.conf"
+WAF_CORAZA_CONF = WAF_CONF_DIR / "coraza.conf"
+WAF_CRS_DIR = WAF_CONF_DIR / "coreruleset"
+WAF_CRS_SETUP_CONF = WAF_CONF_DIR / "crs-setup.conf"
+WAF_AUDIT_LOG = Path("/var/log/nginx/coraza_audit.log")
+WAF_MODULE_PATH = Path("/usr/lib/nginx/modules/ngx_http_coraza_module.so")
+WAF_MODULE_LOAD_CONF = Path("/etc/nginx/modules-enabled/50-mod-http-coraza.conf")
+WAF_CRS_VERSION = "v4.16.0"  # OWASP Core Rule Set Release-Tag
 ```
 
 Alle hier aufgelisteten Verzeichnisse können theoretisch angepasst werden, jedoch muss danach sichergestellt werden, dass der ausführende Benutzer die entsprechenden Berechtigungen dafür hat, genau wie certbot und der Webserver NGINX.
@@ -264,7 +281,34 @@ nrp f2b status
 sudo nrp f2b disable
 ```
 
-### 6. Weitere Befehle
+### 6. Coraza WAF aktivieren (optional)
+
+Die [Coraza](https://coraza.io/) Web Application Firewall prüft eingehende Requests gegen das [OWASP Core Rule Set](https://coreruleset.org/) und blockiert gängige Angriffe (SQL-Injection, XSS, RCE, LFI/RFI, Protokoll-Anomalien, Scanner).
+
+```bash
+# WAF global installieren und aktivieren (einmalig, Build dauert einige Minuten)
+sudo nrp waf enable
+
+# Empfohlen für den Einstieg: erst nur loggen, nicht blockieren
+sudo nrp waf enable --detection-only
+
+# Status anzeigen (Engine-Modus, Hosts mit aktiver WAF)
+nrp waf status
+
+# Global deaktivieren (SecRuleEngine Off, Konfigurationen bleiben gültig)
+sudo nrp waf disable
+```
+
+Anschließend wird die WAF **pro Proxy-Host** aktiviert – interaktiv (bei `nrp add` erscheint die Abfrage `WAF aktivieren (Coraza + OWASP Core Rule Set)?`) oder per Flag:
+
+```bash
+nrp add secure.example.com -i 192.168.1.10 -p 8080 --waf
+nrp add legacy.example.com -i 192.168.1.20 -p 8081 --no-waf
+```
+
+**Empfohlener Rollout:** Zuerst mit `--detection-only` aktivieren, das Audit-Log (`/var/log/nginx/coraza_audit.log`) einige Tage auf False Positives prüfen, danach mit `sudo nrp waf enable` blockierend schalten.
+
+### 7. Weitere Befehle
 
 ```bash
 # Alle Proxy-Hosts auflisten
@@ -282,6 +326,7 @@ nrp --help
 nrp add --help
 nrp site --help
 nrp f2b --help
+nrp waf --help
 ```
 
 ## CLI-Referenz
@@ -297,6 +342,7 @@ sudo nrp setup [--skip-packages] [--with-wireguard]
 **Optionen:**
 - `--skip-packages`: Überspringt die Paketinstallation
 - `--with-wireguard`: Installiert WireGuard, aktiviert IP-Forwarding und initialisiert `wg0`
+- `--with-waf`: Baut und installiert die Coraza WAF inkl. OWASP Core Rule Set (entspricht `sudo nrp waf enable`)
 
 ### `nrp add`
 
@@ -312,6 +358,7 @@ nrp add [FQDN] [OPTIONS]
 - `-e, --external-port INTEGER`: Externer Port (Standard: 443)
 - `-s, --protocol [http|https]`: Forward Scheme (Standard: http)
 - `-w, --websockets / -nw, --no-websockets`: Websockets aktivieren
+- `--waf / --no-waf`: Coraza WAF mit globalem Regelwerk aktivieren (benötigt `sudo nrp waf enable`); ohne Flag erscheint eine interaktive Abfrage, sofern die WAF installiert ist
 - `--email TEXT`: E-Mail für LetsEncrypt Benachrichtigungen
 - `-o, --overwrite`: Bestehende Konfiguration überschreiben
 - `-f, --full-interactive`: Alle Optionen interaktiv abfragen (statt nur Basis-Parameter)
@@ -338,6 +385,9 @@ nrp add secure.example.com -i 192.168.1.30 -p 8443 -e 9443 -s https
 
 # Mit E-Mail für Zertifikate
 nrp add example.com -i 192.168.1.10 -p 8080 --email admin@example.com
+
+# Mit aktivierter Coraza WAF
+nrp add secure.example.com -i 192.168.1.10 -p 8080 --waf
 
 # Via WireGuard-Tunnel (Site muss vorher angelegt sein)
 nrp add app.example.com --site home -i 10.240.0.5 -p 3000
@@ -477,6 +527,70 @@ Zeigt ob Fail2Ban aktiviert ist, ob der Dienst läuft und wie viele IPs in jedem
 
 ---
 
+### `nrp waf`
+
+Verwaltet die Coraza WAF-Integration ([coraza-nginx](https://github.com/corazawaf/coraza-nginx)).
+
+#### `nrp waf enable`
+
+```bash
+sudo nrp waf enable [--detection-only] [--crs-version TAG] [--rebuild]
+```
+
+Führt beim ersten Aufruf den kompletten Build durch (dauert einige Minuten):
+
+1. Installiert Build-Abhängigkeiten (`git`, `golang-go`, `build-essential`, autotools, `libpcre2-dev`, …)
+2. Baut [libcoraza](https://github.com/corazawaf/libcoraza) und installiert es nach `/usr/local`
+3. Lädt den NGINX-Quellcode passend zur installierten Version und baut [coraza-nginx](https://github.com/corazawaf/coraza-nginx) als dynamisches Modul (`--with-compat`)
+4. Aktiviert das Modul über `/etc/nginx/modules-enabled/50-mod-http-coraza.conf`
+5. Installiert das [OWASP Core Rule Set](https://github.com/coreruleset/coreruleset)
+6. Schreibt das globale Regelwerk nach `/etc/nginx/coraza/`
+7. Testet die Konfiguration und startet NGINX neu
+
+**Globales Regelwerk (Standard):**
+
+| Baustein | Inhalt |
+|---|---|
+| `coraza.conf` | Coraza recommended config: Engine-Modus, Request-Body-Limits, JSON-Audit-Log (nur relevante Ereignisse) |
+| `crs-setup.conf` | OWASP CRS Standard-Setup: Anomaly Scoring, Paranoia Level 1, Blocking Mode |
+| `coreruleset/rules/*.conf` | CRS-Regeln: SQLi, XSS, RCE, LFI/RFI, Session Fixation, Protokoll-Anomalien, Scanner-Erkennung |
+
+**Optionen:**
+- `--detection-only`: Angriffe nur loggen statt blockieren (`SecRuleEngine DetectionOnly`) – empfohlen für die Einführungsphase
+- `--crs-version TAG`: Release-Tag des OWASP Core Rule Set (Standard: `v4.16.0`)
+- `--rebuild`: Modul neu kompilieren, z.B. nach einem NGINX-Update (die Modul-Binary muss zur NGINX-Version passen)
+
+**Beispiele:**
+
+```bash
+sudo nrp waf enable
+sudo nrp waf enable --detection-only
+sudo nrp waf enable --crs-version v4.17.0 --rebuild
+```
+
+> **Hinweis:** Das coraza-nginx Modul ist upstream als *experimental* eingestuft. Für kritische Umgebungen empfiehlt sich der Start mit `--detection-only` und Beobachtung des Audit-Logs.
+
+#### `nrp waf disable`
+
+```bash
+sudo nrp waf disable [--yes]
+```
+
+Setzt `SecRuleEngine Off` – Requests werden nicht mehr geprüft. Modul und Regelwerk bleiben installiert, damit bestehende Host-Konfigurationen mit `coraza on;` gültig bleiben.
+
+**Optionen:**
+- `--yes / -y`: Ohne Bestätigungsdialog deaktivieren
+
+#### `nrp waf status`
+
+```bash
+nrp waf status
+```
+
+Zeigt Modul-, Regelwerk- und Engine-Status sowie alle Proxy-Hosts mit aktivierter WAF.
+
+---
+
 ### `nrp remove`
 
 Entfernt einen Proxy-Host.
@@ -604,6 +718,10 @@ ssh -i ~/.ssh/id_ed25519 autonginx@reverseproxy.example.com \
 - Fail2Ban Jail-Konfiguration: `/etc/fail2ban/jail.d/nrp.conf`
 - Fail2Ban Filter (404): `/etc/fail2ban/filter.d/nginx-404.conf`
 - Fail2Ban Filter (Scanner): `/etc/fail2ban/filter.d/nginx-scanners.conf`
+- Coraza WAF Regelwerk: `/etc/nginx/coraza/`
+- Coraza NGINX-Modul: `/usr/lib/nginx/modules/ngx_http_coraza_module.so`
+- Coraza Audit-Log: `/var/log/nginx/coraza_audit.log`
+- WAF Build-Verzeichnis: `/usr/local/src/nrp-coraza/`
 
 ### WireGuard-Konfiguration
 
@@ -630,6 +748,24 @@ Die Pfade der von NRP verwalteten Fail2Ban-Dateien können in `nrp/config.py` an
 | `F2B_FILTER_SCANNERS` | `/etc/fail2ban/filter.d/nginx-scanners.conf` | Filter für Scanner-Erkennung |
 
 > **Hinweis:** Die Schwellwerte (`bantime`, `findtime`, `maxretry`) sind direkt in den Jail-Definitionen in `nrp/core/fail2ban.py` hinterlegt und können dort angepasst werden.
+
+### Coraza WAF-Konfiguration
+
+Die Pfade und Versionen der WAF-Integration können in `nrp/config.py` angepasst werden:
+
+| Variable | Standard | Beschreibung |
+|---|---|---|
+| `WAF_BUILD_DIR` | `/usr/local/src/nrp-coraza` | Build-Verzeichnis für libcoraza, coraza-nginx und NGINX-Quellcode |
+| `WAF_CONF_DIR` | `/etc/nginx/coraza` | Verzeichnis für das globale Regelwerk |
+| `WAF_MAIN_CONF` | `/etc/nginx/coraza/main.conf` | Regelkette, die pro Host via `coraza_rules_file` eingebunden wird |
+| `WAF_CORAZA_CONF` | `/etc/nginx/coraza/coraza.conf` | Basis-Konfiguration (Engine-Modus, Limits, Audit-Log) |
+| `WAF_CRS_DIR` | `/etc/nginx/coraza/coreruleset` | OWASP Core Rule Set Checkout |
+| `WAF_CRS_SETUP_CONF` | `/etc/nginx/coraza/crs-setup.conf` | CRS-Setup (Paranoia Level, Anomaly-Schwellwerte) |
+| `WAF_AUDIT_LOG` | `/var/log/nginx/coraza_audit.log` | JSON-Audit-Log der WAF |
+| `WAF_MODULE_PATH` | `/usr/lib/nginx/modules/ngx_http_coraza_module.so` | Kompiliertes dynamisches Modul |
+| `WAF_CRS_VERSION` | `v4.16.0` | Standard-Release-Tag des Core Rule Set |
+
+**Feintuning:** Paranoia Level, Anomaly-Schwellwerte und Ausnahmen (z.B. für einzelne Anwendungen mit False Positives) werden direkt in `/etc/nginx/coraza/crs-setup.conf` gepflegt – die Datei wird bei einem erneuten `nrp waf enable` **nicht** überschrieben. Nach Änderungen `nginx -t && nginx -s reload` ausführen.
 
 ### Beispiel einer generierten Konfiguration
 
@@ -733,6 +869,30 @@ journalctl -u fail2ban -f
 fail2ban-regex /var/log/nginx/access.log /etc/fail2ban/filter.d/nginx-404.conf
 ```
 
+### Coraza WAF debuggen
+
+```bash
+# Status anzeigen (Modul, Engine-Modus, Hosts mit aktiver WAF)
+nrp waf status
+
+# Audit-Log verfolgen (JSON, nur relevante Ereignisse)
+tail -f /var/log/nginx/coraza_audit.log
+
+# Geblockte Requests im Error-Log finden
+grep -i coraza /var/log/nginx/error.log
+
+# Testen ob die WAF greift (sollte 403 liefern)
+curl -i "https://example.com/?q=<script>alert(1)</script>"
+
+# False Positive: Regel-ID aus dem Audit-Log in crs-setup.conf ausschließen, z.B.
+#   SecRuleRemoveById 942100
+# danach:
+nginx -t && nginx -s reload
+
+# Nach einem NGINX-Update muss das Modul neu gebaut werden
+sudo nrp waf enable --rebuild
+```
+
 ### WireGuard-Tunnel debuggen
 
 ```bash
@@ -813,13 +973,15 @@ NRPv2/
 │   │   ├── remote_setup.py      # Remote Execution Setup
 │   │   ├── site.py              # Site-Management (WireGuard)
 │   │   ├── f2b.py               # Fail2Ban-Integration
+│   │   ├── waf.py               # Coraza WAF-Integration
 │   │   └── completion.py        # Shell-Completion Installation
 │   ├── core/                     # Core Funktionalität
 │   │   ├── nginx.py
 │   │   ├── certbot.py
 │   │   ├── validation.py
 │   │   ├── wireguard.py         # WireGuard Site-DB & Hub-Konfiguration
-│   │   └── fail2ban.py          # Fail2Ban Jail- & Filter-Verwaltung
+│   │   ├── fail2ban.py          # Fail2Ban Jail- & Filter-Verwaltung
+│   │   └── waf.py               # Coraza-Build, CRS & globales Regelwerk
 │   └── templates/                # Jinja2 Templates
 │       ├── nginx_standard.conf.j2
 │       ├── nginx_custom_port.conf.j2

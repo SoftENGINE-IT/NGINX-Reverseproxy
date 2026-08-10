@@ -18,7 +18,10 @@ from nrp.config import (
 @click.option('--skip-packages', is_flag=True, help='Paketinstallation überspringen')
 @click.option('--with-wireguard', is_flag=True, default=False,
               help='WireGuard für Site-Tunnel-Unterstützung mitinstallieren')
-def setup(skip_packages, with_wireguard):
+@click.option('--with-waf', is_flag=True, default=False,
+              help='Coraza WAF (inkl. OWASP Core Rule Set) mitinstallieren')
+@click.pass_context
+def setup(ctx, skip_packages, with_wireguard, with_waf):
     """
     Installiert die Umgebung auf einem Debian 13 System
 
@@ -172,9 +175,18 @@ def setup(skip_packages, with_wireguard):
             click.echo(click.style(f'  ✗ WireGuard konnte nicht gestartet werden: {e}', fg='yellow'))
             click.echo('    Starten Sie WireGuard manuell mit: systemctl enable --now wg-quick@wg0')
 
+    # Step 10 (optional): Coraza WAF setup
+    if with_waf:
+        click.echo('\n10. Installiere Coraza WAF (Build kann einige Minuten dauern)...')
+        from nrp.commands.waf import waf_enable
+        ctx.invoke(waf_enable)
+
     click.echo(click.style('\n✓ Installation erfolgreich abgeschlossen!', fg='green', bold=True))
     click.echo('\nSie können jetzt Proxy-Hosts hinzufügen mit:')
     click.echo('  nrp add example.com')
     if with_wireguard:
         click.echo('\nWireGuard-Sites verwalten mit:')
         click.echo('  nrp site create <NAME> --targets <N>')
+    if with_waf:
+        click.echo('\nWAF pro Host aktivieren mit:')
+        click.echo('  nrp add example.com --waf')

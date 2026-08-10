@@ -24,11 +24,12 @@ from nrp.config import NGINX_CONF_DIR
 @click.option('--external-port', '-e', type=int, default=443, help='Externer Port (Standard: 443)')
 @click.option('--protocol', '-s', type=click.Choice(['http', 'https'], case_sensitive=False), default='http', help='Forward Scheme (http oder https)')
 @click.option('--websockets/--no-websockets', '-w/-nw', default=None, help='Websockets aktivieren')
+@click.option('--waf/--no-waf', default=None, help='Coraza WAF mit globalem Regelwerk aktivieren (benötigt: sudo nrp waf enable)')
 @click.option('--email', help='E-Mail für LetsEncrypt Benachrichtigungen')
 @click.option('--overwrite', '-o', is_flag=True, help='Bestehende Konfiguration überschreiben')
 @click.option('--full-interactive', '-f', is_flag=True, help='Alle Optionen interaktiv abfragen')
 @click.option('--site', 'site_name', default=None, help='WireGuard-Site-Name (Tunnel-Upstream)')
-def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, email, overwrite, full_interactive, site_name):
+def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, waf, email, overwrite, full_interactive, site_name):
     """
     Erstellt einen neuen Proxy-Host
 
@@ -38,6 +39,8 @@ def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, e
         nrp add example.com -i 192.168.1.10 -p 8080
 
         nrp add test.example.com -i 192.168.1.20 -p 3000 -e 8443 -s https -w
+
+        nrp add secure.example.com -i 192.168.1.30 -p 8080 --waf
 
         nrp add app.example.com --site home -i 10.240.12.10 -p 3000
 
@@ -138,6 +141,29 @@ def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, e
         if websockets is None:
             websockets = click.confirm('Websockets aktivieren?', default=False)
 
+    # WAF (Coraza) - Abfrage bzw. Validierung
+    from nrp.core import waf as waf_core
+    waf_installed = waf_core.is_installed()
+
+    if waf is None:
+        if waf_installed:
+            waf = click.confirm('WAF aktivieren (Coraza + OWASP Core Rule Set)?', default=True)
+        else:
+            waf = False
+    elif waf and not waf_installed:
+        click.echo(click.style(
+            'Coraza WAF ist nicht installiert. Bitte zuerst ausführen: sudo nrp waf enable',
+            fg='red'
+        ))
+        return
+
+    if waf and waf_core.get_engine_mode() == 'Off':
+        click.echo(click.style(
+            'Hinweis: SecRuleEngine steht global auf Off - die WAF prüft aktuell keine Requests. '
+            'Aktivieren mit: sudo nrp waf enable',
+            fg='yellow'
+        ))
+
     # Validate external port if provided
     if external_port and not validate_port(external_port):
         click.echo(click.style(f'Ungültiger externer Port: {external_port}', fg='red'))
@@ -169,7 +195,8 @@ def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, e
         internal_port=internal_port,
         external_port=external_port,
         forward_scheme=protocol.lower(),
-        websockets_enabled=websockets
+        websockets_enabled=websockets,
+        waf_enabled=waf
     )
 
     # Step 4: Test and reload
@@ -184,3 +211,5 @@ def add(fqdn, internal_ip, internal_port, external_port, protocol, websockets, e
     click.echo(click.style(f'\n✓ Proxy-Host {fqdn} erfolgreich erstellt!', fg='green'))
     click.echo(f'\nKonfiguration: /etc/nginx/conf.d/{fqdn}.conf')
     click.echo(f'Zertifikat: /etc/letsencrypt/live/{fqdn}/')
+    if waf:
+        click.echo(click.style('WAF: aktiv (Coraza + OWASP Core Rule Set)', fg='green'))

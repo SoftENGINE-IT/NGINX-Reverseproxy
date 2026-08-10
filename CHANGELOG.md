@@ -2,6 +2,37 @@
 
 Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
 
+## [3.2.0] - 2026-08-10
+
+### Hinzugefügt
+
+- **Coraza WAF-Integration** (`nrp waf`)
+  - Neuer Command-Bereich `nrp waf` auf Basis von [coraza-nginx](https://github.com/corazawaf/coraza-nginx)
+  - `nrp waf enable` – baut libcoraza und das coraza-nginx Modul (dynamisch, `--with-compat`, passend zur installierten NGINX-Version), installiert das OWASP Core Rule Set und schreibt das globale Regelwerk
+  - `nrp waf enable --detection-only` – Angriffe nur loggen statt blockieren (`SecRuleEngine DetectionOnly`)
+  - `nrp waf enable --crs-version <TAG>` – CRS-Version wählbar (Standard: `v4.16.0`)
+  - `nrp waf enable --rebuild` – Modul-Neubau, z.B. nach NGINX-Update
+  - `nrp waf disable` – setzt `SecRuleEngine Off`, Host-Konfigurationen bleiben gültig
+  - `nrp waf status` – Modul-, Regelwerk- und Engine-Status sowie Hosts mit aktiver WAF
+
+- **Globales Regelwerk** (`/etc/nginx/coraza/`)
+  - `coraza.conf` – Coraza recommended config: Request-Body-Limits, JSON-Audit-Log (RelevantOnly)
+  - `crs-setup.conf` – OWASP CRS Standard-Setup: Anomaly Scoring, Paranoia Level 1, Blocking Mode; bleibt bei erneutem `enable` erhalten (Feintuning/False-Positive-Ausnahmen)
+  - `main.conf` – Regelkette, pro Host eingebunden via `coraza_rules_file`
+
+- **WAF pro Proxy-Host**
+  - `nrp add --waf / --no-waf` – aktiviert `coraza on;` + globales Regelwerk im Server-Block
+  - Interaktive Abfrage bei `nrp add`, sobald die WAF installiert ist
+  - Beide Templates (`nginx_standard.conf.j2`, `nginx_custom_port.conf.j2`) erweitert
+
+- **Setup-Erweiterung**
+  - `nrp setup --with-waf` – installiert die WAF direkt beim System-Setup
+
+- **Neue Konfigurationskonstanten** in `config.py`
+  - `WAF_BUILD_DIR`, `WAF_CONF_DIR`, `WAF_MAIN_CONF`, `WAF_CORAZA_CONF`, `WAF_CRS_DIR`, `WAF_CRS_SETUP_CONF`, `WAF_AUDIT_LOG`, `WAF_MODULE_PATH`, `WAF_MODULE_LOAD_CONF`, `WAF_LIBCORAZA_REPO`, `WAF_CORAZA_NGINX_REPO`, `WAF_CRS_REPO`, `WAF_CRS_VERSION`
+
+---
+
 ## [3.1.1] - 2026-03-17
 
 ### Verbesserungen
