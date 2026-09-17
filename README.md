@@ -25,6 +25,9 @@ Modernes Python CLI-Tool zur Verwaltung von NGINX Reverse Proxy Konfigurationen 
 ## Installation
 
 ```bash
+# Python Abhängigkeiten installieren
+apt install python3 python3-full
+
 # Repository klonen
 git clone https://github.com/SoftENGINE-IT/NGINX-Reverseproxy.git
 cd NGINX-Reverseproxy
